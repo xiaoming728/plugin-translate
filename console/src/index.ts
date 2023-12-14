@@ -8,36 +8,17 @@ import axios from "axios";
 // @ts-ignore
 export default definePlugin({
     components: {},
-    routes: [
-        {
-            parentName: "Root",
-            route: {
-                path: "/export2doc",
-                name: "export2doc",
-                component: HomeView,
-                meta: {
-                    title: "文章导入导出",
-                    searchable: true,
-                    menu: {
-                        name: "文章导入导出",
-                        group: "tool",
-                        icon: markRaw(IconArrowUpDownLine),
-                        priority: 0,
-                    },
-                },
-            },
-        },
-    ],
     extensionPoints: {
         "post:list-item:operation:create": () => {
             return [
                 {
                     priority: 21,
                     component: markRaw(VDropdownItem),
-                    label: "导出",
+                    label: "一键翻译",
                     permissions: [],
                     action: async (post: ListedPost) => {
-                        window.location.href = '/apis/api.plugin.halo.run/v1alpha1/plugins/export2doc/doExport/export_one/' + post.post.metadata.name
+                        window.location.href = '/apis/api.plugin.halo.run/v1alpha1/plugins/PluginTranslate/translate/post/' + post.post.metadata.name
+                        return true;
                     },
                 },
             ];

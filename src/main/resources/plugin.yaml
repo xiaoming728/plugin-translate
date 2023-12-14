@@ -2,7 +2,7 @@ apiVersion: plugin.halo.run/v1alpha1
 kind: Plugin
 metadata:
   # The name defines how the plugin is invoked,A unique name
-  name: export2doc
+  name: PluginTranslate
 spec:
   enabled: true
   requires: ">=2.5.0"
@@ -13,8 +13,8 @@ spec:
   # 'homepage' usually links to the GitHub repository of the plugin
   homepage: https://jhacker.cn/2023/halo-plugin-export2doc
   # 'displayName' explains what the plugin does in only a few words
-  displayName: "文章导入导出"
-  description: "导出文章为markdown、HTML文件，同时支持导入markdown文件"
+  displayName: "一键翻译"
+  description: "一键翻译并生成文章，同时支持一键翻译主题设置内容"
   license:
     - name: "GPL-3.0"
       url: "https://github.com/halo-dev/plugin-starter/blob/main/LICENSE"

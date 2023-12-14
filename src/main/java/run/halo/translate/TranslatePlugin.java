@@ -1,7 +1,5 @@
-package cn.lyn4ever.export2md;
+package run.halo.translate;
 
-import cn.lyn4ever.export2md.schema.ExportLogSchema;
-import cn.lyn4ever.export2md.schema.ImportLogSchema;
 import org.pf4j.PluginManager;
 import org.pf4j.PluginWrapper;
 import org.springframework.stereotype.Component;
@@ -9,17 +7,16 @@ import run.halo.app.extension.SchemeManager;
 import run.halo.app.plugin.BasePlugin;
 
 /**
- * @author Lyn4ever29
- * @url https://jhacker.cn
- * @date 2023/11/1
+ * 翻译插件
+ *
+ * @author liuchunming
+ * @date 2023-12-14
  */
 @Component
-public class ExportAnythingPlugin extends BasePlugin {
-    private final SchemeManager schemeManager;
+public class TranslatePlugin extends BasePlugin {
 
-    public ExportAnythingPlugin(PluginWrapper wrapper, SchemeManager schemeManager) {
+    public TranslatePlugin(PluginWrapper wrapper) {
         super(wrapper);
-        this.schemeManager = schemeManager;
     }
 
     /**
@@ -29,15 +26,11 @@ public class ExportAnythingPlugin extends BasePlugin {
     @Override
     public void start() {
         // 插件启动时注册自定义模型
-        schemeManager.register(ExportLogSchema.class);
-        schemeManager.register(ImportLogSchema.class);
     }
 
     @Override
     public void stop() {
         // 插件停用时取消注册自定义模型
-        schemeManager.unregister(schemeManager.get(ExportLogSchema.class));
-        schemeManager.unregister(schemeManager.get(ImportLogSchema.class));
 
     }
 

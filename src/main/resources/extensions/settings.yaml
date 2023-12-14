@@ -1,0 +1,25 @@
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: plugin-browsing-log-settings
+spec:
+  forms:
+    - group: basic
+      label: 设置
+      formSchema:
+        - $formkit: text
+          label: 有道翻译api
+          name: url
+          value: https://openapi.youdao.com/api
+          validation: required
+          help: 有道翻译默认api为 https://openapi.youdao.com/api
+        - $formkit: text
+          label: 有道翻译key
+          name: key
+          value: 6afd3195ca055a16
+          validation: required
+        - $formkit: text
+          label: 有道翻译Token
+          name: token
+          value: ledEeAqBzADn7QJodpbnrKRlY9D8yngE
+          validation: required
