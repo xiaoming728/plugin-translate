@@ -8,6 +8,7 @@ import axios from "axios";
 // @ts-ignore
 export default definePlugin({
     components: {},
+    routes: [],
     extensionPoints: {
         "post:list-item:operation:create": () => {
             return [
@@ -15,7 +16,6 @@ export default definePlugin({
                     priority: 21,
                     component: markRaw(VDropdownItem),
                     label: "一键翻译",
-                    permissions: [],
                     action: async (post: ListedPost) => {
                         window.location.href = '/apis/api.plugin.halo.run/v1alpha1/plugins/PluginTranslate/translate/post/' + post.post.metadata.name
                         return true;

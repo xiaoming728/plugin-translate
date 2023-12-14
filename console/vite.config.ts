@@ -11,7 +11,7 @@ import {ElementPlusResolver} from 'unplugin-vue-components/resolvers'
 
 import 'dayjs/locale/zh-cn'
 
-const pluginEntryName = "export2doc";
+const pluginEntryName = "PluginTranslate";
 
 // https://vitejs.dev/config/
 export default ({mode}: { mode: string }) => {
