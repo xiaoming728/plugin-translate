@@ -24,6 +24,8 @@ public class SettingsServiceImpl implements SettingsService {
     private final SettingFetcher settingFetcher;
     @Override
     public Mono<ServerResponse> copySettings(String sourceLang, List<String> langs) {
+        //TODO 循环settings，递归翻译翻译中文内容到对应的语言langs中
+        //TODO 返回前端。
         return null;
     }
 }
