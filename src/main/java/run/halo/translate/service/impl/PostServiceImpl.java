@@ -49,7 +49,7 @@ public class PostServiceImpl implements PostService {
                 String lang = annotations.get("lang");
                 // 获取文章标题和内容
                 String title = postMono.block().getSpec().getTitle();
-                String snapshot = postMono.block().getSpec().getReleaseSnapshot();
+                String snapshot = postMono.block().getSpec().getHeadSnapshot();
                 // 翻译标题
                 String titleTranslate = translate(title, lang);
                 // 翻译内容
@@ -59,15 +59,13 @@ public class PostServiceImpl implements PostService {
                 BeanUtil.copyProperties(postMono.block(), post);
                 post.getMetadata().setName("post");
                 post.getSpec().setTitle(titleTranslate);
-                post.getSpec().setBaseSnapshot(bodyTranslate);
+                post.getSpec().setHeadSnapshot(bodyTranslate);
                 post.getSpec().setCategories(List.of(category));
                 posts.add(post);
+                client.create(post);
             });
         }
-        return Mono.just(posts).flatMap(postList -> {
-            postList.forEach(client::create);
-            return ServerResponse.ok().build();
-        });
+        return Mono.just(posts).flatMap(postList -> ServerResponse.ok().build());
     }
 
     private String translate(String title, String lang) {
