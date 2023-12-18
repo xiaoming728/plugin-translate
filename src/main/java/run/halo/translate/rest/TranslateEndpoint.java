@@ -3,6 +3,7 @@ package run.halo.translate.rest;
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
 import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
+import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.fn.builders.schema.Builder;
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import run.halo.app.core.extension.Theme;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.translate.service.PostService;
 
@@ -39,7 +41,22 @@ public class TranslateEndpoint implements CustomEndpoint {
                         ))
                     .response(responseBuilder()
                         .implementation(Boolean.class))
-            ).build();
+            )
+            .POST("translate/deepl", this::translate,
+                builder -> builder.operationId("Translate")
+                    .description("translate article")
+                    .tag(tag)
+                    .requestBody(requestBodyBuilder()
+                        .required(true)
+                        .content(contentBuilder()
+                            .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                            .schema(schemaBuilder()
+                                .implementation(PostService.class))
+                        ))
+                    .response(responseBuilder()
+                        .implementation(Theme.class))
+            )
+            .build();
 
     }
     private Mono<ServerResponse> posts(ServerRequest request) {
@@ -47,4 +64,11 @@ public class TranslateEndpoint implements CustomEndpoint {
             .flatMap(postService::copyPost);
     }
 
+    private Mono<ServerResponse> translate(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(SystemTranslateParam.class)
+            .flatMap(postService::translate2)
+            .flatMap(response ->
+                ServerResponse.ok().bodyValue(response)
+            );
+    }
 }

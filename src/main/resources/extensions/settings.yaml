@@ -4,7 +4,7 @@ metadata:
   name: plugin-translate-settings
 spec:
   forms:
-    - group: basic
+    - group: base
       label: 设置
       formSchema:
         - $formkit: text

@@ -8,12 +8,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.netty.http.client.HttpClient;
 import run.halo.app.core.extension.content.Category;
 import run.halo.app.plugin.ReactiveSettingFetcher;
-import run.halo.app.plugin.SettingFetcher;
 import run.halo.translate.rest.PostRequest;
+import run.halo.translate.rest.SystemTranslateParam;
 import run.halo.translate.service.PostService;
 import java.util.StringJoiner;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +37,7 @@ import run.halo.app.extension.ReactiveExtensionClient;
  */
 @Slf4j
 @Component
+@AllArgsConstructor
 public class PostServiceImpl implements PostService {
 
     private final ReactiveExtensionClient client;
@@ -38,10 +45,11 @@ public class PostServiceImpl implements PostService {
     private final ReactiveSettingFetcher settingFetcher;
 
 
-    public PostServiceImpl(ReactiveExtensionClient client, ReactiveSettingFetcher settingFetcher) {
-        this.client = client;
-        this.settingFetcher = settingFetcher;
-    }
+    private final HttpClient httpClient = HttpClient.create()
+        .followRedirect(true);
+    private final WebClient webClient = WebClient.builder()
+        .clientConnector(new ReactorClientHttpConnector(httpClient))
+        .build();
 
     @Override
     public Mono<ServerResponse> copyPost(PostRequest postRequest) {
@@ -79,6 +87,68 @@ public class PostServiceImpl implements PostService {
             });
         }
         return ServerResponse.ok().bodyValue(true);
+    }
+
+    @Override
+    public Mono<String> translate2(SystemTranslateParam systemTranslateParam) {
+        String text = systemTranslateParam.getText();
+        String toLan = systemTranslateParam.getToLan();
+
+        // String url = "https://api-free.deepl.com/v2/translate";
+        // String url = basic.get("url").asText();
+        // String apiKey = basic.get("token").asText();
+        // String apiKey = "4e4228b2-bd70-6275-2acd-038cdcba9144:fx";
+
+        // HttpHeaders headers = new HttpHeaders();
+        // headers.setContentType(MediaType.APPLICATION_JSON);
+        // headers.add("Authorization", "DeepL-Auth-Key " + apiKey);
+        //
+        // String[] texts = {text};
+        // net.minidev.json.JSONObject request = new net.minidev.json.JSONObject();
+        // request.put("text", texts);
+        // request.put("target_lang", toLan);
+
+        // return webClient.post()
+        //     .uri(url)
+        //     .headers(httpHeaders -> httpHeaders.addAll(headers))
+        //     .body(BodyInserters.fromValue(request))
+        //     .retrieve()
+        //     .bodyToMono(String.class);
+        return getMomentUrl()
+            .flatMap(url ->
+                getMomentToken()
+                    .flatMap(token -> {
+
+                        HttpHeaders headers = new HttpHeaders();
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                        headers.add("Authorization", "DeepL-Auth-Key " + token);
+
+                        String[] texts = {text};
+                        net.minidev.json.JSONObject request = new net.minidev.json.JSONObject();
+                        request.put("text", texts);
+                        request.put("target_lang", toLan);
+
+                        return webClient.post()
+                            .uri(url)
+                            .headers(httpHeaders -> httpHeaders.addAll(headers))
+                            .bodyValue(request)
+                            .retrieve()
+                            .bodyToMono(String.class);
+
+                    })
+            );
+    }
+
+    Mono<String> getMomentUrl() {
+        return this.settingFetcher.get("base")
+            .map(setting -> setting.get("url").asText("https://api-free.deepl.com/v2/translate"))
+            .defaultIfEmpty("https://api-free.deepl.com/v2/translate");
+    }
+
+    Mono<String> getMomentToken() {
+        return this.settingFetcher.get("base")
+            .map(setting -> setting.get("token").asText(""))
+            .defaultIfEmpty("");
     }
 
     private String translate(String title, String lang) {
