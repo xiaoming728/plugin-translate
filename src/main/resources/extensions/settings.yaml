@@ -8,18 +8,13 @@ spec:
       label: 设置
       formSchema:
         - $formkit: text
-          label: 有道翻译api
+          label: deepl api url
           name: url
-          value: https://openapi.youdao.com/api
+          value: https://api-free.deepl.com/v2/translate
           validation: required
-          help: 有道翻译默认api为 https://openapi.youdao.com/api
+          help: deepl api为 https://openapi.youdao.com/api
         - $formkit: text
-          label: 有道翻译key
-          name: key
-          value: 6afd3195ca055a16
-          validation: required
-        - $formkit: text
-          label: 有道翻译Token
+          label: deepl api key
           name: token
-          value: ledEeAqBzADn7QJodpbnrKRlY9D8yngE
+          value:
           validation: required

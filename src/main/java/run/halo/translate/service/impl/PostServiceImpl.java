@@ -1,6 +1,7 @@
 package run.halo.translate.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSON;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,6 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import run.halo.app.core.extension.content.Category;
@@ -68,7 +75,7 @@ public class PostServiceImpl implements PostService {
         return Mono.just(posts).flatMap(postList -> ServerResponse.ok().build());
     }
 
-    private String translate(String title, String lang) {
+    private String translate1(String title, String lang) {
         JsonNode basic = settingFetcher.get("basic");
         String url = basic.get("url").asText();
         String key = basic.get("key").asText();
@@ -92,6 +99,50 @@ public class PostServiceImpl implements PostService {
         }
         JSONObject jsonNode = JSONUtil.parseObj(result);
         return jsonNode.getStr("data");
+    }
 
+    /**
+     * 翻译
+     *
+     * @param text  翻译文本
+     * @param toLan 目标语言
+     * @return 字符串
+     */
+    public String translate(String text, String toLan) {
+        // String apiKey = "4e4228b2-bd70-6275-2acd-038cdcba9144:fx";
+
+        JsonNode basic = settingFetcher.get("basic");
+        String url = basic.get("url").asText();
+        String apiKey = basic.get("token").asText();
+
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        // 设置请求体json格式
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "DeepL-Auth-Key " + apiKey);
+        // 构建请求体参数
+        String[] texts = {text};
+        JSONObject request = new JSONObject();
+        request.set("text", texts);
+        request.set("target_lang", toLan);
+
+        WebClient webClient = WebClient.create();
+
+        try {
+            // 创建HttpEntity对象
+            String res = webClient.post()
+                .uri(url)
+                .headers(httpHeaders -> httpHeaders.addAll(headers))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(request))
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+            JSONObject jsonObject = JSONUtil.parseObj(res);
+            return jsonObject.getJSONArray("translations").getJSONObject(0).getStr("text");
+        } catch (Exception e) {
+            log.error("翻译失败", e);
+            return "";
+        }
     }
 }
