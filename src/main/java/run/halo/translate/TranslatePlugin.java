@@ -26,6 +26,7 @@ public class TranslatePlugin extends BasePlugin {
     @Override
     public void start() {
         // 插件启动时注册自定义模型
+
     }
 
     @Override

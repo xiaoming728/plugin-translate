@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: Setting
 metadata:
-  name: plugin-browsing-log-settings
+  name: plugin-translate-settings
 spec:
   forms:
     - group: basic

@@ -15,6 +15,8 @@ spec:
   # 'displayName' explains what the plugin does in only a few words
   displayName: "一键翻译"
   description: "一键翻译并生成文章，同时支持一键翻译主题设置内容"
+  settingName: plugin-translate-settings
+  configMapName: plugin-translate-configMap
   license:
     - name: "GPL-3.0"
       url: "https://github.com/halo-dev/plugin-starter/blob/main/LICENSE"
