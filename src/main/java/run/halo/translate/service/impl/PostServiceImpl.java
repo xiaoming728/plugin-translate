@@ -29,13 +29,16 @@ import run.halo.app.extension.ReactiveExtensionClient;
  */
 @Slf4j
 @Component
-@AllArgsConstructor
-
 public class PostServiceImpl implements PostService {
 
     private final ReactiveExtensionClient client;
 
     private final SettingFetcher settingFetcher;
+
+    public PostServiceImpl(ReactiveExtensionClient client, SettingFetcher settingFetcher) {
+        this.client = client;
+        this.settingFetcher = settingFetcher;
+    }
 
     @Override
     public Mono<ServerResponse> copyPost(String postName, List<String> categorys) {
