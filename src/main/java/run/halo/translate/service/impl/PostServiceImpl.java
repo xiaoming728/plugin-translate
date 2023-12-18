@@ -7,11 +7,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import run.halo.app.core.extension.content.Category;
+import run.halo.app.plugin.ReactiveSettingFetcher;
 import run.halo.app.plugin.SettingFetcher;
+import run.halo.translate.rest.PostRequest;
 import run.halo.translate.service.PostService;
 import java.util.StringJoiner;
 import lombok.extern.slf4j.Slf4j;
@@ -33,33 +35,41 @@ public class PostServiceImpl implements PostService {
 
     private final ReactiveExtensionClient client;
 
-    private final SettingFetcher settingFetcher;
+    private final ReactiveSettingFetcher settingFetcher;
 
-    public PostServiceImpl(ReactiveExtensionClient client, SettingFetcher settingFetcher) {
+
+    public PostServiceImpl(ReactiveExtensionClient client, ReactiveSettingFetcher settingFetcher) {
         this.client = client;
         this.settingFetcher = settingFetcher;
     }
 
     @Override
-    public Mono<ServerResponse> copyPost(String postName, List<String> categorys) {
-        Mono<Post> postMono = client.get(Post.class, postName);
+    public Mono<ServerResponse> copyPost(PostRequest postRequest) {
+        Mono<Post> postMono = client.get(Post.class, postRequest.postName());
+        // 获取文章标题和内容
+        AtomicReference<Post> thisPost = new AtomicReference<>();
+        AtomicReference<String> title = new AtomicReference<>();
+        AtomicReference<String> snapshot = new AtomicReference<>();
+        postMono.doOnSuccess(post -> {
+            thisPost.set(post);
+            title.set(post.getSpec().getTitle());
+            snapshot.set(post.getSpec().getHeadSnapshot());
+        }).subscribe();
         // 获取categorys元数据lang获取语言，然后把post标题和内容翻译成对应的语言
         List<Post> posts = new ArrayList<>();
-        for (String category : categorys) {
+        for (String category : postRequest.categorys()) {
             Mono<Category> categoryMono = client.get(Category.class, category);
             categoryMono.subscribe(category1 -> {
                 Map<String, String> annotations = category1.getMetadata().getAnnotations();
                 String lang = annotations.get("lang");
-                // 获取文章标题和内容
-                String title = postMono.block().getSpec().getTitle();
-                String snapshot = postMono.block().getSpec().getHeadSnapshot();
+
                 // 翻译标题
-                String titleTranslate = translate(title, lang);
+                String titleTranslate = translate(title.get(), lang);
                 // 翻译内容
-                String bodyTranslate = translate(snapshot, lang);
+                String bodyTranslate = translate(snapshot.get(), lang);
                 // 保存翻译后的文章
                 Post post = new Post();
-                BeanUtil.copyProperties(postMono.block(), post);
+                BeanUtil.copyProperties(thisPost, post);
                 post.getMetadata().setName("post");
                 post.getSpec().setTitle(titleTranslate);
                 post.getSpec().setHeadSnapshot(bodyTranslate);
@@ -68,11 +78,12 @@ public class PostServiceImpl implements PostService {
                 client.create(post);
             });
         }
-        return Mono.just(posts).flatMap(postList -> ServerResponse.ok().build());
+        return ServerResponse.ok().bodyValue(true);
     }
 
     private String translate(String title, String lang) {
-        JsonNode basic = settingFetcher.get("basic");
+        Mono<JsonNode> settings = settingFetcher.get("basic");
+        JsonNode basic = settings.block();
         String url = basic.get("url").asText();
         String key = basic.get("key").asText();
         String value = basic.get("value").asText();

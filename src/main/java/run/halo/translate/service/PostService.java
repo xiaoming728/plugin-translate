@@ -4,8 +4,9 @@ import java.util.List;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import reactor.core.publisher.Mono;
+import run.halo.translate.rest.PostRequest;
 
 
 public interface PostService  {
-    Mono<ServerResponse> copyPost(String postName, List<String> categorys);
+    Mono<ServerResponse> copyPost(PostRequest postRequest);
 }
