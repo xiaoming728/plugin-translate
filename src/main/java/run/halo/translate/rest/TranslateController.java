@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import run.halo.app.plugin.ApiVersion;
-import run.halo.translate.entity.PostParam;
 import run.halo.translate.service.PostService;
 import run.halo.translate.service.SettingsService;
 
