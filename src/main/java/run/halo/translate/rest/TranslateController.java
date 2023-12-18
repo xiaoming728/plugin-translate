@@ -1,6 +1,7 @@
 package run.halo.translate.rest;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,14 +17,16 @@ import run.halo.translate.service.SettingsService;
 @RestController
 public class TranslateController {
 
+    @Autowired
     private PostService postService;
 
+    @Autowired
     private SettingsService settingsService;
 
-    @PostMapping("/posts")
-    public Mono<ServerResponse> posts(String postName, List<String> categorys) {
-        return postService.copyPost(postName, categorys);
-    }
+    // @PostMapping("/posts")
+    // public Mono<ServerResponse> posts(String postName, List<String> categorys) {
+    //     return postService.copyPost(postName, categorys);
+    // }
 
     @PostMapping("/settings")
     public Mono<ServerResponse> settings(String sourceLang, List<String> langs) {

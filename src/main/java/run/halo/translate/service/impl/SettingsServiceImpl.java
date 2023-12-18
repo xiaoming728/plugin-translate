@@ -1,5 +1,8 @@
 package run.halo.translate.service.impl;
 
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +30,37 @@ public class SettingsServiceImpl implements SettingsService {
     }
     @Override
     public Mono<ServerResponse> copySettings(String sourceLang, List<String> langs) {
-        //TODO 循环settings，递归翻译翻译中文内容到对应的语言langs中
-        //TODO 返回前端。
-        return null;
+        JSONObject entries = JSONUtil.parseObj(sourceLang);
+        for (String lang : langs) {
+            recursionJSON(entries, lang);
+        }
+        return ServerResponse.ok().bodyValue(entries);
     }
+
+    private void recursionJSON(JSONObject entries, String lang) {
+        for (String key : entries.keySet()) {
+            Object value = entries.get(key);
+            if (value instanceof String str) {
+                String translate = translate(str, lang);
+                entries.set(key, translate);
+            } else if (value instanceof JSONArray array) {
+                for (int i = 0; i < array.size(); i++) {
+                    Object object = array.get(i);
+                    if (object instanceof String str) {
+                        String translate = translate(str, lang);
+                        array.set(i, translate);
+                    } else if (object instanceof JSONObject jsonObject) {
+                        recursionJSON(jsonObject, lang);
+                    }
+                }
+            } else if (value instanceof JSONObject jsonObject) {
+                recursionJSON(jsonObject, lang);
+            }
+        }
+    }
+
+    private String translate(String str, String lang) {
+        return str;
+    }
+
 }
