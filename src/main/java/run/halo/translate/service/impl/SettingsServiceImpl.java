@@ -4,17 +4,16 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import run.halo.app.plugin.SettingFetcher;
-import run.halo.translate.service.PostService;
+import run.halo.translate.service.TranslateService;
 import run.halo.translate.service.SettingsService;
 
 /**
- * A default implementation of {@link PostService}.
+ * A default implementation of {@link TranslateService}.
  *
  * @author guqing
  * @since 2.0.0

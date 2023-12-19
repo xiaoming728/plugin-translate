@@ -1,21 +1,24 @@
 package run.halo.translate.service;
 
-import java.util.List;
-import org.springframework.web.reactive.function.server.ServerResponse;
-
 import reactor.core.publisher.Mono;
-import run.halo.translate.rest.PostRequest;
-import run.halo.translate.rest.SystemTranslateParam;
+import run.halo.app.core.extension.content.Post;
+import run.halo.app.extension.ListResult;
 
+/**
+ * Service for {@link Post}.
+ *
+ * @author guqing
+ * @since 2.0.0
+ */
+public interface PostService {
 
-public interface PostService  {
-    Mono<ServerResponse> copyPost(PostRequest postRequest);
+    Mono<Post> draftPost(PostRequest postRequest);
 
-    /**
-     * 翻译
-     *
-     * @param systemTranslateParam 系统翻译参数
-     * @return 字符串
-     */
-    Mono<String> translate2(SystemTranslateParam systemTranslateParam);
+    Mono<Post> updatePost(PostRequest postRequest);
+
+    Mono<ContentWrapper> getHeadContent(String postName);
+
+    Mono<ContentWrapper> getReleaseContent(String postName);
+
+    Mono<ContentWrapper> getContent(String snapshotName, String baseSnapshotName);
 }

@@ -3,13 +3,12 @@ package run.halo.translate.rest;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import run.halo.app.plugin.ApiVersion;
-import run.halo.translate.service.PostService;
+import run.halo.translate.service.TranslateService;
 import run.halo.translate.service.SettingsService;
 
 @ApiVersion("v1alpha1")
@@ -18,7 +17,7 @@ import run.halo.translate.service.SettingsService;
 public class TranslateController {
 
     @Autowired
-    private PostService postService;
+    private TranslateService translateService;
 
     @Autowired
     private SettingsService settingsService;

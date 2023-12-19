@@ -16,13 +16,13 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.Theme;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
-import run.halo.translate.service.PostService;
+import run.halo.translate.service.TranslateService;
 
 @Component
 @RequiredArgsConstructor
 public class TranslateEndpoint implements CustomEndpoint {
 
-    private final PostService postService;
+    private final TranslateService translateService;
 
     @Override
     public RouterFunction<ServerResponse> endpoint() {
@@ -33,7 +33,7 @@ public class TranslateEndpoint implements CustomEndpoint {
                 builder -> builder.operationId("CreateBrowsingLog")
                     .description("Create a BrowsingLog.")
                     .tag(tag)
-                    .requestBody(requestBodyBuilder().implementation(PostRequest.class)
+                    .requestBody(requestBodyBuilder().implementation(PostTranslateRequest.class)
                         .required(true)
                         .content(contentBuilder()
                             .mediaType(MediaType.APPLICATION_JSON_VALUE)
@@ -51,7 +51,7 @@ public class TranslateEndpoint implements CustomEndpoint {
                         .content(contentBuilder()
                             .mediaType(MediaType.APPLICATION_JSON_VALUE)
                             .schema(schemaBuilder()
-                                .implementation(PostService.class))
+                                .implementation(TranslateService.class))
                         ))
                     .response(responseBuilder()
                         .implementation(Theme.class))
@@ -60,13 +60,13 @@ public class TranslateEndpoint implements CustomEndpoint {
 
     }
     private Mono<ServerResponse> posts(ServerRequest request) {
-        return request.bodyToMono(PostRequest.class)
-            .flatMap(postService::copyPost);
+        return request.bodyToMono(PostTranslateRequest.class)
+            .flatMap(translateService::copyPost);
     }
 
     private Mono<ServerResponse> translate(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(SystemTranslateParam.class)
-            .flatMap(postService::translate2)
+            .flatMap(translateService::translate2)
             .flatMap(response ->
                 ServerResponse.ok().bodyValue(response)
             );
