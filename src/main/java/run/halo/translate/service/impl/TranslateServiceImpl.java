@@ -139,7 +139,7 @@ public class TranslateServiceImpl implements TranslateService {
     }
 
     @Override
-    public Mono<String> translate2(SystemTranslateParam systemTranslateParam) {
+    public Mono<String> translate(SystemTranslateParam systemTranslateParam) {
         String text = systemTranslateParam.getText();
         String toLan = systemTranslateParam.getToLan();
 

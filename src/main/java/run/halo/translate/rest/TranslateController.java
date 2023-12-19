@@ -27,9 +27,9 @@ public class TranslateController {
     //     return postService.copyPost(postName, categorys);
     // }
 
-    @PostMapping("/settings")
-    public Mono<ServerResponse> settings(String sourceLang, List<String> langs) {
-        return settingsService.copySettings(sourceLang, langs);
-    }
+    // @PostMapping("/settings")
+    // public Mono<ServerResponse> settings(String sourceLang, List<String> langs) {
+    //     return settingsService.copySettings(sourceLang, langs);
+    // }
 
 }

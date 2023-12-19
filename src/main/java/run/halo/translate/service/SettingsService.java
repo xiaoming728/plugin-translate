@@ -3,6 +3,7 @@ package run.halo.translate.service;
 import java.util.List;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import run.halo.translate.vo.ThymeConfig;
 
 public interface SettingsService {
     /**
@@ -12,5 +13,5 @@ public interface SettingsService {
      * @param langs 沿着
      * @return {@link Mono}<{@link ServerResponse}>
      */
-    Mono<ServerResponse> copySettings(String sourceLang, List<String> langs);
+    Mono<ServerResponse> copySettings(ThymeConfig thymeConfig);
 }
