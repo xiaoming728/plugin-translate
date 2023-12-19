@@ -105,7 +105,6 @@ public class TranslateServiceImpl implements TranslateService {
 
                 post.setSpec(postSpec);
                 post.setStatus(postStatus);
-                //设置元数据才能保存
                 post.setMetadata(new Metadata());
                 post.getMetadata().setName(UUID.fastUUID().toString(false));
 
