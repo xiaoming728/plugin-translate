@@ -153,27 +153,6 @@ public class TranslateServiceImpl implements TranslateService {
     public Mono<String> translate(SystemTranslateParam systemTranslateParam) {
         String text = systemTranslateParam.getText();
         String toLan = systemTranslateParam.getToLan();
-
-        // String url = "https://api-free.deepl.com/v2/translate";
-        // String url = basic.get("url").asText();
-        // String apiKey = basic.get("token").asText();
-        // String apiKey = "4e4228b2-bd70-6275-2acd-038cdcba9144:fx";
-
-        // HttpHeaders headers = new HttpHeaders();
-        // headers.setContentType(MediaType.APPLICATION_JSON);
-        // headers.add("Authorization", "DeepL-Auth-Key " + apiKey);
-        //
-        // String[] texts = {text};
-        // net.minidev.json.JSONObject request = new net.minidev.json.JSONObject();
-        // request.put("text", texts);
-        // request.put("target_lang", toLan);
-
-        // return webClient.post()
-        //     .uri(url)
-        //     .headers(httpHeaders -> httpHeaders.addAll(headers))
-        //     .body(BodyInserters.fromValue(request))
-        //     .retrieve()
-        //     .bodyToMono(String.class);
         return getMomentUrl()
             .flatMap(url ->
                 getMomentToken()
