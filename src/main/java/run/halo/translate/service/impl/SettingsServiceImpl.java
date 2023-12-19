@@ -38,6 +38,9 @@ public class SettingsServiceImpl implements SettingsService {
 
     private void recursionJSON(JSONObject entries, String lang) {
         for (String key : entries.keySet()) {
+            if (key.equals("apiVersion") || key.equals("kind") || key.equals("metadata")) {
+                continue;
+            }
             Object value = entries.get(key);
             if (value instanceof String str) {
                 String translate = translate(str, lang);

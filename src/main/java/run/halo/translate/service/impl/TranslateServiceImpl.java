@@ -21,7 +21,6 @@ import run.halo.app.extension.Metadata;
 import run.halo.app.extension.Ref;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 import run.halo.translate.rest.PostTranslateRequest;
-import run.halo.translate.rest.SystemTranslateParam;
 import run.halo.translate.service.ContentWrapper;
 import run.halo.translate.service.PostRequest;
 import run.halo.translate.service.PostService;
@@ -32,6 +31,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.content.Post;
 import run.halo.app.extension.ReactiveExtensionClient;
+import run.halo.translate.vo.SystemTranslateParam;
 
 /**
  * A default implementation of {@link TranslateService}.

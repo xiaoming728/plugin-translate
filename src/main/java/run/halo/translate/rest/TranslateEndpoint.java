@@ -17,6 +17,8 @@ import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.Theme;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.translate.service.TranslateService;
+import run.halo.translate.service.PostService;
+import run.halo.translate.vo.SystemTranslateParam;
 
 @Component
 @RequiredArgsConstructor
@@ -56,6 +58,20 @@ public class TranslateEndpoint implements CustomEndpoint {
                     .response(responseBuilder()
                         .implementation(Theme.class))
             )
+            .POST("thyme/translate", this::thymeTranslate,
+                builder -> builder.operationId("Translate")
+                    .description("translate article")
+                    .tag(tag)
+                    .requestBody(requestBodyBuilder()
+                        .required(true)
+                        .content(contentBuilder()
+                            .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                            .schema(schemaBuilder()
+                                .implementation(PostService.class))
+                        ))
+                    .response(responseBuilder()
+                        .implementation(Theme.class))
+            )
             .build();
 
     }
@@ -65,6 +81,14 @@ public class TranslateEndpoint implements CustomEndpoint {
     }
 
     private Mono<ServerResponse> translate(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(SystemTranslateParam.class)
+            .flatMap(translateService::translate2)
+            .flatMap(response ->
+                ServerResponse.ok().bodyValue(response)
+            );
+    }
+
+    private Mono<ServerResponse> thymeTranslate(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(SystemTranslateParam.class)
             .flatMap(translateService::translate2)
             .flatMap(response ->

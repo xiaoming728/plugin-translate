@@ -4,7 +4,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import reactor.core.publisher.Mono;
 import run.halo.translate.rest.PostTranslateRequest;
-import run.halo.translate.rest.SystemTranslateParam;
+import run.halo.translate.vo.SystemTranslateParam;
 
 
 public interface TranslateService {
