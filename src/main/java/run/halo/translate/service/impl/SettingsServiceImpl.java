@@ -68,8 +68,6 @@ public class SettingsServiceImpl implements SettingsService {
                         if (StringUtils.isBlank(cnValue)) {
                             continue;
                         }
-                        log.info("翻译的key：{}", cnKey);
-                        log.info("翻译前的内容：{}", cnValue);
 
                         Mono<Void> translateAndSet =
                             translateService.translate(new SystemTranslateParam(cnValue, lang))
@@ -78,7 +76,6 @@ public class SettingsServiceImpl implements SettingsService {
                                     String content =
                                         json.getJSONArray("translations").getJSONObject(0)
                                             .getStr("text");
-                                    log.info("翻译后的内容：{}", content);
                                     target.set(cnKey, content);
                                     entries.set(key, jsonObject.toString());
                                     return Mono.empty();
@@ -102,8 +99,6 @@ public class SettingsServiceImpl implements SettingsService {
                                     if (StringUtils.isBlank(cnValue2)) {
                                         continue;
                                     }
-                                    log.info("翻译的key：{}", cnKey1);
-                                    log.info("翻译前的内容：{}", cnValue2);
 
                                     Mono<Void> translateAndSet =
                                         translateService.translate(new SystemTranslateParam(cnValue2, lang))
@@ -112,7 +107,6 @@ public class SettingsServiceImpl implements SettingsService {
                                                 String content =
                                                     json.getJSONArray("translations").getJSONObject(0)
                                                         .getStr("text");
-                                                log.info("翻译后的内容 jsonarray：{}", content);
                                                 cnValue1.set(cnKey1, content);
                                                 entries.set(key, jsonObject.toString());
                                                 return Mono.empty();
@@ -126,8 +120,6 @@ public class SettingsServiceImpl implements SettingsService {
                                 if (StringUtils.isBlank(cnValue1)) {
                                     continue;
                                 }
-                                log.info("翻译的key：{}", cnKey);
-                                log.info("翻译前的内容：{}", cnValue1);
 
                                 int finalI = i;
                                 Mono<Void> translateAndSet =
@@ -137,7 +129,6 @@ public class SettingsServiceImpl implements SettingsService {
                                             String content =
                                                 json.getJSONArray("translations").getJSONObject(0)
                                                     .getStr("text");
-                                            log.info("翻译后的内容 jsonarray：{}", content);
                                             targetValue.set(finalI, content);
                                             entries.set(key, jsonObject.toString());
                                             return Mono.empty();
@@ -158,8 +149,6 @@ public class SettingsServiceImpl implements SettingsService {
                             if (StringUtils.isBlank(cnValue1)) {
                                 continue;
                             }
-                            log.info("翻译的key：{}", cnKey1);
-                            log.info("翻译前的内容：{}", cnValue1);
 
                             Mono<Void> translateAndSet =
                                 translateService.translate(new SystemTranslateParam(cnValue1, lang))
@@ -168,7 +157,6 @@ public class SettingsServiceImpl implements SettingsService {
                                         String content =
                                             json.getJSONArray("translations").getJSONObject(0)
                                                 .getStr("text");
-                                        log.info("翻译后的内容 jsonobject：{}", content);
                                         targetValue.set(cnKey1, content);
                                         entries.set(key, jsonObject.toString());
                                         return Mono.empty();
@@ -185,5 +173,4 @@ public class SettingsServiceImpl implements SettingsService {
 
         return Flux.merge(translationMonos).then();
     }
-
 }
