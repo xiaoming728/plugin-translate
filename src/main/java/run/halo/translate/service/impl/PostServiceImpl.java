@@ -12,14 +12,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.netty.http.client.HttpClient;
 import run.halo.app.core.extension.content.Category;
 import run.halo.app.plugin.ReactiveSettingFetcher;
-import run.halo.translate.rest.PostRequest;
-import run.halo.translate.rest.SystemTranslateParam;
+import run.halo.translate.vo.PostRequest;
+import run.halo.translate.vo.SystemTranslateParam;
 import run.halo.translate.service.PostService;
 import java.util.StringJoiner;
 import lombok.extern.slf4j.Slf4j;
@@ -72,9 +71,9 @@ public class PostServiceImpl implements PostService {
                 String lang = annotations.get("lang");
 
                 // 翻译标题
-                String titleTranslate = translate(title.get(), lang);
+                String titleTranslate = translate(new SystemTranslateParam(title.get(), lang)).block();
                 // 翻译内容
-                String bodyTranslate = translate(snapshot.get(), lang);
+                String bodyTranslate = translate(new SystemTranslateParam(snapshot.get(), lang)).block();
                 // 保存翻译后的文章
                 Post post = new Post();
                 BeanUtil.copyProperties(thisPost, post);
@@ -90,30 +89,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Mono<String> translate2(SystemTranslateParam systemTranslateParam) {
+    public Mono<String> translate(SystemTranslateParam systemTranslateParam) {
         String text = systemTranslateParam.getText();
         String toLan = systemTranslateParam.getToLan();
-
-        // String url = "https://api-free.deepl.com/v2/translate";
-        // String url = basic.get("url").asText();
-        // String apiKey = basic.get("token").asText();
-        // String apiKey = "4e4228b2-bd70-6275-2acd-038cdcba9144:fx";
-
-        // HttpHeaders headers = new HttpHeaders();
-        // headers.setContentType(MediaType.APPLICATION_JSON);
-        // headers.add("Authorization", "DeepL-Auth-Key " + apiKey);
-        //
-        // String[] texts = {text};
-        // net.minidev.json.JSONObject request = new net.minidev.json.JSONObject();
-        // request.put("text", texts);
-        // request.put("target_lang", toLan);
-
-        // return webClient.post()
-        //     .uri(url)
-        //     .headers(httpHeaders -> httpHeaders.addAll(headers))
-        //     .body(BodyInserters.fromValue(request))
-        //     .retrieve()
-        //     .bodyToMono(String.class);
         return getMomentUrl()
             .flatMap(url ->
                 getMomentToken()
@@ -141,41 +119,13 @@ public class PostServiceImpl implements PostService {
 
     Mono<String> getMomentUrl() {
         return this.settingFetcher.get("base")
-            .map(setting -> setting.get("url").asText("https://api-free.deepl.com/v2/translate"))
+            .map(setting -> setting.get("url").asText())
             .defaultIfEmpty("https://api-free.deepl.com/v2/translate");
     }
 
     Mono<String> getMomentToken() {
         return this.settingFetcher.get("base")
-            .map(setting -> setting.get("token").asText(""))
+            .map(setting -> setting.get("token").asText())
             .defaultIfEmpty("");
-    }
-
-    private String translate(String title, String lang) {
-        Mono<JsonNode> settings = settingFetcher.get("basic");
-        JsonNode basic = settings.block();
-        String url = basic.get("url").asText();
-        String key = basic.get("key").asText();
-        String value = basic.get("value").asText();
-        if (StringUtils.isBlank(url) || StringUtils.isBlank(key) || StringUtils.isBlank(value)) {
-            throw new RuntimeException("请先配置翻译接口");
-        }
-        String result = null;
-        WebClient webClient = WebClient.create();
-        StringJoiner stringJoiner = new StringJoiner("&");
-        stringJoiner.add("key=" + key);
-        stringJoiner.add("value=" + value);
-        stringJoiner.add("text=" + title);
-        stringJoiner.add("to=" + lang);
-        String uri = url + "?" + stringJoiner;
-        Mono<String> stringMono = webClient.get().uri(uri).retrieve().bodyToMono(String.class);
-        try {
-            result = stringMono.block();
-        } catch (Exception e) {
-            log.error("翻译失败", e);
-        }
-        JSONObject jsonNode = JSONUtil.parseObj(result);
-        return jsonNode.getStr("data");
-
     }
 }

@@ -1,11 +1,10 @@
 package run.halo.translate.service;
 
-import java.util.List;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import reactor.core.publisher.Mono;
-import run.halo.translate.rest.PostRequest;
-import run.halo.translate.rest.SystemTranslateParam;
+import run.halo.translate.vo.PostRequest;
+import run.halo.translate.vo.SystemTranslateParam;
 
 
 public interface PostService  {
@@ -17,5 +16,5 @@ public interface PostService  {
      * @param systemTranslateParam 系统翻译参数
      * @return 字符串
      */
-    Mono<String> translate2(SystemTranslateParam systemTranslateParam);
+    Mono<String> translate(SystemTranslateParam systemTranslateParam);
 }
