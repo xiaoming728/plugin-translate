@@ -1,7 +1,10 @@
 package run.halo.translate.service.impl;
 
 import cn.hutool.core.lang.UUID;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import java.io.IOException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +15,8 @@ import org.markdown4j.Markdown4jProcessor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -20,6 +25,7 @@ import reactor.netty.http.client.HttpClient;
 import run.halo.app.core.extension.content.Category;
 import run.halo.app.core.extension.content.Snapshot;
 import run.halo.app.extension.Metadata;
+import run.halo.app.extension.MetadataUtil;
 import run.halo.app.extension.Ref;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 import run.halo.translate.rest.PostTranslateRequest;
@@ -73,9 +79,9 @@ public class TranslateServiceImpl implements TranslateService {
                                 lang = "en";
                             }
                             String finalLang = lang;
-                            return translate(post.getSpec().getTitle(), lang).flatMap(title -> {
-                                post.getSpec().setTitle(title);
-                                return translate(contentWrapper.getRaw(), finalLang).flatMap(
+                            String finalLang1 = lang;
+                            return  getContextUsername().flatMap(username -> translate(post.getSpec().getTitle(),
+                                finalLang1).flatMap(title -> translate(contentWrapper.getRaw(), finalLang).flatMap(
                                     raw -> {
                                         contentWrapper.setRaw(raw);
                                         return translate(contentWrapper.getContent(),
@@ -83,6 +89,7 @@ public class TranslateServiceImpl implements TranslateService {
                                             content -> {
                                                 contentWrapper.setContent(content);
                                                 Post.PostSpec postSpec = new Post.PostSpec();
+                                                postSpec.setTitle(title);
                                                 postSpec.setSlug(UUID.fastUUID().toString(false));
                                                 postSpec.setAllowComment(true);
                                                 postSpec.setDeleted(false);
@@ -104,36 +111,40 @@ public class TranslateServiceImpl implements TranslateService {
                                                     .setName(UUID.fastUUID().toString(false));
                                                 Snapshot.SnapShotSpec snapShotSpec =
                                                     new Snapshot.SnapShotSpec();
-                                                snapShotSpec.setRawType("html");
-                                                StringJoiner sj = new StringJoiner("\n");
-                                                snapShotSpec.setRawPatch(sj.toString());
-                                                try {
-                                                    snapShotSpec.setContentPatch(
-                                                        new Markdown4jProcessor().process(
-                                                            sj.toString()));
-                                                } catch (IOException e) {
-                                                    snapShotSpec.setContentPatch(
-                                                        snapShotSpec.getRawPatch());
-                                                }
+                                                snapShotSpec.setRawType(contentWrapper.getRawType());
+                                                snapShotSpec.setRawPatch(StringUtils.defaultString(raw));
+                                                snapShotSpec.setContentPatch(StringUtils.defaultString(content));
 
                                                 snapShotSpec.setSubjectRef(Ref.of(post));
 
-                                                String matedataName =
-                                                    UUID.fastUUID().toString(false);
-                                                postSpec.setBaseSnapshot(matedataName);
-                                                postSpec.setHeadSnapshot(matedataName);
-                                                postSpec.setReleaseSnapshot(matedataName);
-                                                post.getSpec().setCategories(
-                                                    List.of(category.getMetadata().getName()));
-                                                post.getMetadata()
+                                                snapShotSpec.setOwner(username);
+                                                Snapshot snapshot = new Snapshot();
+                                                snapshot.setSpec(snapShotSpec);
+                                                //设置元数据才能保存
+                                                snapshot.setMetadata(new Metadata());
+                                                snapshot.getMetadata()
                                                     .setName(UUID.fastUUID().toString(false));
-                                                PostRequest postRequest = new PostRequest(post,
-                                                    new PostRequest.Content(raw, content,
-                                                        contentWrapper.getRawType()));
-                                                return postService.draftPost(postRequest);
+                                                MetadataUtil.nullSafeAnnotations(snapshot).put(Snapshot.KEEP_RAW_ANNO,
+                                                    String.valueOf(true));
+                                                return client.create(snapshot).flatMap(snapshot1 -> {
+                                                    postSpec.setBaseSnapshot(
+                                                        snapshot1.getMetadata().getName());
+                                                    postSpec.setHeadSnapshot(
+                                                        snapshot1.getMetadata().getName());
+                                                    postSpec.setReleaseSnapshot(
+                                                        snapshot1.getMetadata().getName());
+
+                                                    post.getSpec().setCategories(
+                                                        List.of(category.getMetadata().getName()));
+                                                    post.getMetadata()
+                                                        .setName(UUID.fastUUID().toString(false));
+                                                    PostRequest postRequest = new PostRequest(post,
+                                                        new PostRequest.Content(raw, content,
+                                                            contentWrapper.getRawType()));
+                                                    return postService.draftPost(postRequest);
+                                                });
                                             });
-                                    });
-                            });
+                                    })));
                         })).then(ServerResponse.ok().build());
             }));
     }
@@ -214,15 +225,28 @@ public class TranslateServiceImpl implements TranslateService {
                         net.minidev.json.JSONObject request = new net.minidev.json.JSONObject();
                         request.put("text", texts);
                         request.put("target_lang", toLan);
-
-                        return webClient.post()
+                        Mono<String> stringMono = webClient.post()
                             .uri(url)
                             .headers(httpHeaders -> httpHeaders.addAll(headers))
                             .bodyValue(request)
                             .retrieve()
                             .bodyToMono(String.class);
+                        return stringMono.flatMap(json -> {
+                            JSONObject jsonObject = JSONUtil.parseObj(json);
+                            String content =
+                                jsonObject.getJSONArray("translations").getJSONObject(0)
+                                    .getStr("text");
+                            return Mono.just(content);
+                        });
 
                     })
             );
+    }
+
+
+    public Mono<String> getContextUsername() {
+        return ReactiveSecurityContextHolder.getContext()
+            .map(SecurityContext::getAuthentication)
+            .map(Principal::getName);
     }
 }

@@ -53,6 +53,7 @@ public abstract class AbstractContentService {
         Assert.notNull(snapshot, "The snapshot must not be null.");
         String keepRawAnno =
             MetadataUtil.nullSafeAnnotations(snapshot).get(Snapshot.KEEP_RAW_ANNO);
+        log.debug("keepRawAnno: {}", keepRawAnno);
         if (!StringUtils.equals(Boolean.TRUE.toString(), keepRawAnno)) {
             throw new IllegalArgumentException(
                 String.format("The snapshot [%s] is not a base snapshot.",
@@ -146,7 +147,7 @@ public abstract class AbstractContentService {
         return snapshotToUse;
     }
 
-    protected Mono<String> getContextUsername() {
+    public Mono<String> getContextUsername() {
         return ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .map(Principal::getName);
