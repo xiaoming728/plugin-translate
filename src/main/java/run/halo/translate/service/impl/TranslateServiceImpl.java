@@ -63,7 +63,7 @@ public class TranslateServiceImpl implements TranslateService {
         Mono<Post> postMono = client.get(Post.class, postTranslateRequest.postName());
         return postMono.flatMap(post -> postService.getHeadContent(postTranslateRequest.postName())
             .flatMap(contentWrapper -> {
-                Flux.fromIterable(postTranslateRequest.categorys())
+                return Flux.fromIterable(postTranslateRequest.categorys())
                     .flatMap(categoryName -> client.get(Category.class, categoryName)
                         .flatMap(category -> {
                             Map<String, String> annotations =
@@ -134,8 +134,7 @@ public class TranslateServiceImpl implements TranslateService {
                                             });
                                     });
                             });
-                        }));
-                return Mono.empty();
+                        })).then(ServerResponse.ok().build());
             }));
     }
 
