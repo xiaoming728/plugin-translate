@@ -16,5 +16,5 @@ public interface TranslateService {
      * @param systemTranslateParam 系统翻译参数
      * @return 字符串
      */
-    Mono<String> translate2(SystemTranslateParam systemTranslateParam);
+    Mono<String> translate(SystemTranslateParam systemTranslateParam);
 }

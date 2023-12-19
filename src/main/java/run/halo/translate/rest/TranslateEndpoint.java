@@ -16,19 +16,22 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.Theme;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
+import run.halo.translate.service.SettingsService;
 import run.halo.translate.service.TranslateService;
 import run.halo.translate.service.PostService;
 import run.halo.translate.vo.SystemTranslateParam;
+import run.halo.translate.vo.ThymeConfig;
 
 @Component
 @RequiredArgsConstructor
 public class TranslateEndpoint implements CustomEndpoint {
 
     private final TranslateService translateService;
+    private final SettingsService settingsService;
 
     @Override
     public RouterFunction<ServerResponse> endpoint() {
-        final var tag = "plugin.halo.run/v1alpha1/Translate";
+        final var tag = "plugin/Translate";
 
         return SpringdocRouteBuilder.route()
             .POST("/translate/posts", this::posts,
@@ -82,17 +85,14 @@ public class TranslateEndpoint implements CustomEndpoint {
 
     private Mono<ServerResponse> translate(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(SystemTranslateParam.class)
-            .flatMap(translateService::translate2)
+            .flatMap(translateService::translate)
             .flatMap(response ->
                 ServerResponse.ok().bodyValue(response)
             );
     }
 
     private Mono<ServerResponse> thymeTranslate(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(SystemTranslateParam.class)
-            .flatMap(translateService::translate2)
-            .flatMap(response ->
-                ServerResponse.ok().bodyValue(response)
-            );
+        return serverRequest.bodyToMono(ThymeConfig.class)
+            .flatMap(settingsService::copySettings);
     }
 }
