@@ -14,12 +14,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.Disposable;
 import reactor.netty.http.client.HttpClient;
 import run.halo.app.core.extension.content.Category;
 import run.halo.app.core.extension.content.Snapshot;
 import run.halo.app.extension.Metadata;
-import run.halo.app.extension.MetadataUtil;
 import run.halo.app.extension.Ref;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 import run.halo.translate.rest.PostTranslateRequest;
@@ -73,7 +71,7 @@ public class TranslateServiceImpl implements TranslateService {
             postService.getHeadContent(postTranslateRequest.postName());
         headContent.doOnSuccess(context::set).subscribe();
         // 获取categorys元数据lang获取语言，然后把post标题和内容翻译成对应的语言
-        List<Post> posts = new ArrayList<>();
+        List<PostRequest> posts = new ArrayList<>();
         for (String category : postTranslateRequest.categorys()) {
             Mono<Category> categoryMono = client.get(Category.class, category);
             categoryMono.subscribe(category1 -> {
@@ -133,10 +131,13 @@ public class TranslateServiceImpl implements TranslateService {
                 post.getSpec().setCategories(List.of(category));
                 post.getMetadata().setName(UUID.fastUUID().toString(false));
 
-
-                PostRequest postRequest = new PostRequest(post, new PostRequest.Content(translate(context.get().getRaw(), lang).toString(), translate(context.get().getContent(), lang).toString(), context.get().getRawType()));
+                AtomicReference<String> raw = new AtomicReference<>();
+                translate(context.get().getRaw(), lang).doOnSuccess(raw::set).subscribe();
+                AtomicReference<String> context1 = new AtomicReference<>();
+                translate(context.get().getContent(), lang).doOnSuccess(context1::set).subscribe();
+                PostRequest postRequest = new PostRequest(post, new PostRequest.Content(raw.get(), context1.get(), context.get().getRawType()));
                 postService.draftPost(postRequest);
-                posts.add(post);
+                posts.add(postRequest);
             });
         }
         return ServerResponse.ok().bodyValue(posts);
