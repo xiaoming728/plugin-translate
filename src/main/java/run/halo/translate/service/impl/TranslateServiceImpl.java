@@ -12,8 +12,10 @@ import org.markdown4j.Markdown4jProcessor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.netty.http.client.HttpClient;
 import run.halo.app.core.extension.content.Category;
 import run.halo.app.core.extension.content.Snapshot;
@@ -61,67 +63,79 @@ public class TranslateServiceImpl implements TranslateService {
         Mono<Post> postMono = client.get(Post.class, postTranslateRequest.postName());
         return postMono.flatMap(post -> postService.getHeadContent(postTranslateRequest.postName())
             .flatMap(contentWrapper -> {
-                postTranslateRequest.categorys().forEach(categoryName -> {
-                    client.get(Category.class, categoryName).flatMap(category -> {
-                        Map<String, String> annotations = category.getMetadata().getAnnotations();
-                        String lang = annotations.get("lang");
-                        if (StringUtils.isBlank(lang)) {
-                            lang = "en";
-                        }
-                        String finalLang = lang;
-                        return translate(post.getSpec().getTitle(), lang).flatMap(title -> {
-                            post.getSpec().setTitle(title);
-                            return translate(contentWrapper.getRaw(), finalLang).flatMap(raw -> {
-                                contentWrapper.setRaw(raw);
-                                return translate(contentWrapper.getContent(), finalLang).flatMap(
-                                    content -> {
-                                        contentWrapper.setContent(content);
-                                        Post.PostSpec postSpec = new Post.PostSpec();
-                                        postSpec.setSlug(UUID.fastUUID().toString(false));
-                                        postSpec.setAllowComment(true);
-                                        postSpec.setDeleted(false);
-                                        Post.Excerpt excerpt = new Post.Excerpt();
-                                        excerpt.setAutoGenerate(true);
-                                        postSpec.setExcerpt(excerpt);
-                                        postSpec.setPriority(0);
-                                        postSpec.setVisible(Post.VisibleEnum.PUBLIC);
-                                        postSpec.setPublish(false);
-                                        postSpec.setPinned(false);
-                                        Post.PostStatus postStatus = new Post.PostStatus();
-                                        //草稿箱，待发布状态
-                                        postStatus.setPhase(Post.PostPhase.DRAFT.name());
+                Flux.fromIterable(postTranslateRequest.categorys())
+                    .flatMap(categoryName -> client.get(Category.class, categoryName)
+                        .flatMap(category -> {
+                            Map<String, String> annotations =
+                                category.getMetadata().getAnnotations();
+                            String lang = annotations.get("lang");
+                            if (StringUtils.isBlank(lang)) {
+                                lang = "en";
+                            }
+                            String finalLang = lang;
+                            return translate(post.getSpec().getTitle(), lang).flatMap(title -> {
+                                post.getSpec().setTitle(title);
+                                return translate(contentWrapper.getRaw(), finalLang).flatMap(
+                                    raw -> {
+                                        contentWrapper.setRaw(raw);
+                                        return translate(contentWrapper.getContent(),
+                                            finalLang).flatMap(
+                                            content -> {
+                                                contentWrapper.setContent(content);
+                                                Post.PostSpec postSpec = new Post.PostSpec();
+                                                postSpec.setSlug(UUID.fastUUID().toString(false));
+                                                postSpec.setAllowComment(true);
+                                                postSpec.setDeleted(false);
+                                                Post.Excerpt excerpt = new Post.Excerpt();
+                                                excerpt.setAutoGenerate(true);
+                                                postSpec.setExcerpt(excerpt);
+                                                postSpec.setPriority(0);
+                                                postSpec.setVisible(Post.VisibleEnum.PUBLIC);
+                                                postSpec.setPublish(false);
+                                                postSpec.setPinned(false);
+                                                Post.PostStatus postStatus = new Post.PostStatus();
+                                                //草稿箱，待发布状态
+                                                postStatus.setPhase(Post.PostPhase.DRAFT.name());
 
-                                        post.setSpec(postSpec);
-                                        post.setStatus(postStatus);
-                                        post.setMetadata(new Metadata());
-                                        post.getMetadata().setName(UUID.fastUUID().toString(false));
-                                        Snapshot.SnapShotSpec snapShotSpec = new Snapshot.SnapShotSpec();
-                                        snapShotSpec.setRawType("html");
-                                        StringJoiner sj = new StringJoiner("\n");
-                                        snapShotSpec.setRawPatch(sj.toString());
-                                        try {
-                                            snapShotSpec.setContentPatch(new Markdown4jProcessor().process(sj.toString()));
-                                        } catch (IOException e) {
-                                            snapShotSpec.setContentPatch(snapShotSpec.getRawPatch());
-                                        }
+                                                post.setSpec(postSpec);
+                                                post.setStatus(postStatus);
+                                                post.setMetadata(new Metadata());
+                                                post.getMetadata()
+                                                    .setName(UUID.fastUUID().toString(false));
+                                                Snapshot.SnapShotSpec snapShotSpec =
+                                                    new Snapshot.SnapShotSpec();
+                                                snapShotSpec.setRawType("html");
+                                                StringJoiner sj = new StringJoiner("\n");
+                                                snapShotSpec.setRawPatch(sj.toString());
+                                                try {
+                                                    snapShotSpec.setContentPatch(
+                                                        new Markdown4jProcessor().process(
+                                                            sj.toString()));
+                                                } catch (IOException e) {
+                                                    snapShotSpec.setContentPatch(
+                                                        snapShotSpec.getRawPatch());
+                                                }
 
-                                        snapShotSpec.setSubjectRef(Ref.of(post));
+                                                snapShotSpec.setSubjectRef(Ref.of(post));
 
-                                        String matedataName = UUID.fastUUID().toString(false);
-                                        postSpec.setBaseSnapshot(matedataName);
-                                        postSpec.setHeadSnapshot(matedataName);
-                                        postSpec.setReleaseSnapshot(matedataName);
-                                        post.getSpec().setCategories(List.of(category.getMetadata().getName()));
-                                        post.getMetadata().setName(UUID.fastUUID().toString(false));
-                                        PostRequest postRequest = new PostRequest(post,
-                                            new PostRequest.Content(raw, content, contentWrapper.getRawType()));
-                                        return postService.draftPost(postRequest);
+                                                String matedataName =
+                                                    UUID.fastUUID().toString(false);
+                                                postSpec.setBaseSnapshot(matedataName);
+                                                postSpec.setHeadSnapshot(matedataName);
+                                                postSpec.setReleaseSnapshot(matedataName);
+                                                post.getSpec().setCategories(
+                                                    List.of(category.getMetadata().getName()));
+                                                post.getMetadata()
+                                                    .setName(UUID.fastUUID().toString(false));
+                                                PostRequest postRequest = new PostRequest(post,
+                                                    new PostRequest.Content(raw, content,
+                                                        contentWrapper.getRawType()));
+                                                return postService.draftPost(postRequest);
+                                            });
                                     });
                             });
-                        });
-                    });
-                });
-                return ServerResponse.ok().bodyValue(post);
+                        }));
+                return Mono.empty();
             }));
     }
 
