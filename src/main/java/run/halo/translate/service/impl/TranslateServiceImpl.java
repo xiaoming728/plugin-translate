@@ -80,71 +80,47 @@ public class TranslateServiceImpl implements TranslateService {
                             }
                             String finalLang = lang;
                             String finalLang1 = lang;
-                            return  getContextUsername().flatMap(username -> translate(post.getSpec().getTitle(),
-                                finalLang1).flatMap(title -> translate(contentWrapper.getRaw(), finalLang).flatMap(
-                                    raw -> {
-                                        contentWrapper.setRaw(raw);
-                                        return translate(contentWrapper.getContent(),
-                                            finalLang).flatMap(
-                                            content -> {
-                                                contentWrapper.setContent(content);
-                                                Post.PostSpec postSpec = new Post.PostSpec();
-                                                postSpec.setTitle(title);
-                                                postSpec.setSlug(UUID.fastUUID().toString(false));
-                                                postSpec.setAllowComment(true);
-                                                postSpec.setDeleted(false);
-                                                Post.Excerpt excerpt = new Post.Excerpt();
-                                                excerpt.setAutoGenerate(true);
-                                                postSpec.setExcerpt(excerpt);
-                                                postSpec.setPriority(0);
-                                                postSpec.setVisible(Post.VisibleEnum.PUBLIC);
-                                                postSpec.setPublish(false);
-                                                postSpec.setPinned(false);
-                                                Post.PostStatus postStatus = new Post.PostStatus();
-                                                //草稿箱，待发布状态
-                                                postStatus.setPhase(Post.PostPhase.DRAFT.name());
-
-                                                post.setSpec(postSpec);
-                                                post.setStatus(postStatus);
-                                                post.setMetadata(new Metadata());
-                                                post.getMetadata()
-                                                    .setName(UUID.fastUUID().toString(false));
-                                                Snapshot.SnapShotSpec snapShotSpec =
-                                                    new Snapshot.SnapShotSpec();
-                                                snapShotSpec.setRawType(contentWrapper.getRawType());
-                                                snapShotSpec.setRawPatch(StringUtils.defaultString(raw));
-                                                snapShotSpec.setContentPatch(StringUtils.defaultString(content));
-
-                                                snapShotSpec.setSubjectRef(Ref.of(post));
-
-                                                snapShotSpec.setOwner(username);
-                                                Snapshot snapshot = new Snapshot();
-                                                snapshot.setSpec(snapShotSpec);
-                                                //设置元数据才能保存
-                                                snapshot.setMetadata(new Metadata());
-                                                snapshot.getMetadata()
-                                                    .setName(UUID.fastUUID().toString(false));
-                                                MetadataUtil.nullSafeAnnotations(snapshot).put(Snapshot.KEEP_RAW_ANNO,
-                                                    String.valueOf(true));
-                                                return client.create(snapshot).flatMap(snapshot1 -> {
-                                                    postSpec.setBaseSnapshot(
-                                                        snapshot1.getMetadata().getName());
-                                                    postSpec.setHeadSnapshot(
-                                                        snapshot1.getMetadata().getName());
-                                                    postSpec.setReleaseSnapshot(
-                                                        snapshot1.getMetadata().getName());
-
-                                                    post.getSpec().setCategories(
-                                                        List.of(category.getMetadata().getName()));
+                            return getContextUsername().flatMap(
+                                username -> translate(post.getSpec().getTitle(),
+                                    finalLang1).flatMap(
+                                    title -> translate(contentWrapper.getRaw(), finalLang).flatMap(
+                                        raw -> {
+                                            contentWrapper.setRaw(raw);
+                                            return translate(contentWrapper.getContent(),
+                                                finalLang).flatMap(
+                                                content -> {
+                                                    contentWrapper.setContent(content);
+                                                    Post.PostSpec postSpec = new Post.PostSpec();
+                                                    postSpec.setTitle(title);
+                                                    postSpec.setSlug(
+                                                        UUID.fastUUID().toString(false));
+                                                    postSpec.setAllowComment(true);
+                                                    postSpec.setDeleted(false);
+                                                    Post.Excerpt excerpt = new Post.Excerpt();
+                                                    excerpt.setAutoGenerate(true);
+                                                    postSpec.setExcerpt(excerpt);
+                                                    postSpec.setPriority(0);
+                                                    postSpec.setVisible(Post.VisibleEnum.PUBLIC);
+                                                    postSpec.setPublish(false);
+                                                    postSpec.setPinned(false);
+                                                    Post.PostStatus postStatus =
+                                                        new Post.PostStatus();
+                                                    //草稿箱，待发布状态
+                                                    postStatus.setPhase(
+                                                        Post.PostPhase.DRAFT.name());
+                                                    post.setSpec(postSpec);
+                                                    post.setStatus(postStatus);
+                                                    post.setMetadata(new Metadata());
                                                     post.getMetadata()
                                                         .setName(UUID.fastUUID().toString(false));
+                                                    post.getSpec().setCategories(
+                                                        List.of(category.getMetadata().getName()));
                                                     PostRequest postRequest = new PostRequest(post,
                                                         new PostRequest.Content(raw, content,
                                                             contentWrapper.getRawType()));
                                                     return postService.draftPost(postRequest);
                                                 });
-                                            });
-                                    })));
+                                        })));
                         })).then(ServerResponse.ok().build());
             }));
     }
